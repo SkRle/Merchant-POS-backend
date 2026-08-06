@@ -1,0 +1,24 @@
+server:
+  port: 4500
+  env: local
+
+database:
+  host: localhost
+  port: 8900
+  user: postgres
+  password: testPokemonP@ssw0rd
+  name: pokemon
+
+redis:
+  addr: localhost:6379
+  password: ""
+
+minio:
+  endpoint: localhost:9000
+  access_key: admin
+  secret_key: admin123
+  use_ssl: false
+
+centrifugo:
+  endpoint: http://localhost:8000/api
+  api_key: ""

@@ -1,0 +1,10 @@
+# Air live reload temporary files
+/tmp
+build-errors.log
+main
+
+# Environment files
+.env
+
+# Binary outputs
+/out

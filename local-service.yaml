@@ -1,0 +1,76 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: merchantposDev
+      POSTGRES_PASSWORD: merchantpos@dev!
+      POSTGRES_DB: merchantpos
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./local-service-data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - ./local-service-data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  centrifugo:
+    image: centrifugo/centrifugo:v5
+    restart: unless-stopped
+    ports:
+      - "9000:9000" # HTTP API + WebSocket
+      - "15000:15000" # gRPC API
+    volumes:
+      - ./local-service-data/centrifugo:/centrifugo/data
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # minio:
+  #   image: minio/minio:latest
+  #   restart: unless-stopped
+  #   environment:
+  #     MINIO_ROOT_USER: admin
+  #     MINIO_ROOT_PASSWORD: admin123
+  #   ports:
+  #     - "9000:9000" # S3 API
+  #     - "9001:9001" # Web Console (admin)
+  #   volumes:
+  #     - ./local-service-data/minio:/data:rw
+  #   command: server /data --console-address ":9001"
+  #   healthcheck:
+  #     test: ["CMD", "mc", "ready", "local"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # minio-init:
+  #   image: minio/mc:latest
+  #   restart: "no"
+  #   depends_on:
+  #     minio:
+  #       condition: service_healthy
+  #   entrypoint: >
+  #     /bin/sh -c "
+  #     mc alias set local http://minio:9000 admin admin123 &&
+  #     mc mb --ignore-existing local/eduid &&
+  #     (mc admin user svcacct info local eduid-app > /dev/null 2>&1 && echo 'service account eduid-app already exists, skip') ||
+  #     mc admin user svcacct add local admin --access-key eduid-app
+  #     "
